@@ -7,19 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. THE USER (Restaurant or Hungry Person)
+// 1. THE USER
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
   clerkId   String   @unique 
-  role      String   @default("USER") // "BUSINESS" or "USER"
+  role      String   @default("USER")
   createdAt DateTime @default(now())
 
-  // Relationships
   items     FoodItem[] 
 }
 
-// 2. THE FOOD (Leftover listings)
+// 2. THE FOOD
 model FoodItem {
   id            String   @id @default(uuid())
   title         String
@@ -29,10 +28,10 @@ model FoodItem {
   image         String?  
   pickupTime    String   
 
-  // This is the new field for the Timer/Urgency logic
+  // This is the new field for the Timer
   deadline      DateTime? 
 
-  // Status to track if it is taken (lowercase to be safe!)
+  // Status (lowercase is safer)
   status        String   @default("available") 
 
   createdAt     DateTime @default(now())

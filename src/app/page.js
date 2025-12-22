@@ -1,59 +1,70 @@
 import { db } from "@/lib/db";
 import { checkUser } from "@/lib/checkUser";
+import { claimFoodItem } from "@/src/actions/claim"; // Make sure this path is correct for your folder!
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-import { claimFoodItem } from "@/actions/claim"; 
-
 import Link from "next/link";
 
-// Force the page to refresh data every time you visit
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   await checkUser();
 
-  // 1. FETCH ONLY ACTIVE FOOD
-  // "gt" means "Greater Than" -> Deadline must be in the future
+  // Fetch only AVAILABLE food
   const items = await db.foodItem.findMany({
     where: { 
       status: "available",
-      deadline: {
-        gt: new Date() // Only fetch items that haven't expired yet
-      }
     },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <div className="min-h-screen p-8 font-sans max-w-6xl mx-auto">
-      {/* ... (Keep your Header code here) ... */}
+      
+      <header className="flex justify-between items-center mb-12">
+        <h1 className="text-3xl font-bold tracking-tight">LeftoverLink 🥘</h1>
+        <div className="flex gap-4 items-center">
+          <SignedOut>
+            <SignInButton><Button>Sign In to Post</Button></SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/dashboard"><Button variant="outline">Post Food +</Button></Link>
+            <UserButton />
+          </SignedIn>
+        </div>
+      </header>
 
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {/* ... (Keep your "No food available" check here) ... */}
+        {items.length === 0 && (
+          <div className="col-span-full text-center py-20 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No food available right now.</p>
+          </div>
+        )}
 
         {items.map((item) => {
-          // CALCULATE TIME REMAINING
+          // --- TIMER LOGIC ---
           const now = new Date();
-          const deadline = new Date(item.deadline);
-          const timeDiff = deadline - now; // Difference in milliseconds
+          // If no deadline is set, assume it's valid for 24 hours (fallback)
+          const deadline = item.deadline ? new Date(item.deadline) : new Date(now.getTime() + 24*60*60*1000);
+          
+          const timeDiff = deadline - now; 
           const minutesLeft = Math.floor(timeDiff / 1000 / 60);
           
-          // Logic: Is it less than 30 mins?
-          const isUrgent = minutesLeft > 0 && minutesLeft <= 30;
+          // If time is up, don't show the card at all
+          if (timeDiff < 0) return null;
+
+          // Urgent if less than 60 mins left
+          const isUrgent = minutesLeft > 0 && minutesLeft <= 60;
 
           return (
             <Card key={item.id} className={`w-full shadow-md transition ${isUrgent ? 'border-2 border-red-500 bg-red-50' : ''}`}>
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-xl">{item.title}</CardTitle>
-                  
-                  {/* URGENCY BADGE */}
                   {isUrgent && (
                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded animate-pulse">
-                       HURRY! Ends in {minutesLeft} mins
+                       HURRY! {minutesLeft}m left
                      </span>
                   )}
                 </div>
@@ -77,7 +88,6 @@ export default async function Home() {
             </Card>
           );
         })}
-
       </main>
     </div>
   );
