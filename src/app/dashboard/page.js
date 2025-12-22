@@ -1,70 +1,71 @@
 import { db } from "@/lib/db";
-import { checkUser } from "@/lib/checkUser";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache"; // <--- 1. NEW IMPORT HERE
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
-export default async function Home() {
-  // 1. Run the sync check (if logged in)
-  await checkUser();
+async function createFoodItem(formData) {
+  "use server";
+  
+  const user = await currentUser();
+  if (!user) return;
 
-  // 2. Fetch all food items (Newest first)
-  const items = await db.foodItem.findMany({
-    orderBy: { createdAt: "desc" },
+  // 1. Find the Database User
+  const dbUser = await db.user.findUnique({
+    where: {
+      clerkId: user.id,
+    },
   });
 
+  if (!dbUser) {
+    console.log("User not found in database");
+    return;
+  }
+
+  // 2. Save the food item
+  await db.foodItem.create({
+    data: {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      pickupTime: formData.get("pickupTime"),
+      userId: dbUser.id,
+    },
+  });
+
+  // 3. FORCE REFRESH THE HOME PAGE (The Magic Fix)
+  revalidatePath("/"); 
+
+  // 4. Go back home
+  redirect("/"); 
+}
+
+export default async function Dashboard() {
   return (
-    <div className="min-h-screen p-8 font-sans max-w-6xl mx-auto">
+    <div className="max-w-2xl mx-auto p-10">
+      <h1 className="text-3xl font-bold mb-8">Post Leftover Food</h1>
       
-      {/* HEADER */}
-      <header className="flex justify-between items-center mb-12">
-        <h1 className="text-3xl font-bold tracking-tight">LeftoverLink 🥘</h1>
+      <form action={createFoodItem} className="space-y-6">
         
-        <div className="flex gap-4 items-center">
-          <SignedOut>
-            <SignInButton>
-              <Button>Sign In to Post</Button>
-            </SignInButton>
-          </SignedOut>
-
-          <SignedIn>
-            <Link href="/dashboard">
-              <Button variant="outline">Post Food +</Button>
-            </Link>
-            <UserButton />
-          </SignedIn>
+        <div className="space-y-2">
+          <Label htmlFor="title">Food Title</Label>
+          <Input name="title" id="title" placeholder="e.g. 5 Spicy Chicken Burgers" required />
         </div>
-      </header>
 
-      {/* FOOD FEED */}
-      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {items.length === 0 && (
-          <div className="col-span-full text-center py-20 bg-gray-50 rounded-lg">
-            <p className="text-gray-500 text-lg">No food available yet.</p>
-            <p className="text-sm text-gray-400">Be the first to share!</p>
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea name="description" id="description" placeholder="Freshly made, packed in boxes..." required />
+        </div>
 
-        {items.map((item) => (
-          <Card key={item.id} className="w-full shadow-md hover:shadow-lg transition">
-            <CardHeader>
-              <CardTitle className="text-xl">{item.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">{item.description}</p>
-              <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-semibold inline-block">
-                ⏰ Pickup: {item.pickupTime}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full">Claim This Item</Button>
-            </CardFooter>
-          </Card>
-        ))}
+        <div className="space-y-2">
+          <Label htmlFor="pickupTime">Pickup Time</Label>
+          <Input name="pickupTime" id="pickupTime" placeholder="e.g. Before 10 PM Tonight" required />
+        </div>
 
-      </main>
+        <Button type="submit" className="w-full">Post Food</Button>
+      </form>
     </div>
   );
 }
