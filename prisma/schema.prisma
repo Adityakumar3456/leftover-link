@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. THE USER (Restaurant or Hungry Person)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  clerkId   String   @unique // This links to your Login system
+  role      String   @default("USER") // "BUSINESS" or "USER"
+  createdAt DateTime @default(now())
+
+  // Relationships
+  items     FoodItem[] // A user can post many food items
+}
+
+// 2. THE FOOD (Leftover listings)
+model FoodItem {
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  price         Float    @default(0) // 0 means Free!
+  originalPrice Float?
+  image         String?  // URL of the food photo
+  pickupTime    String   // e.g. "Today before 9 PM"
+  
+  status        String   @default("AVAILABLE") // AVAILABLE, BOOKED, CLAIMED
+  
+  createdAt     DateTime @default(now())
+  
+  // Who posted this?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
