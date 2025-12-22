@@ -3,6 +3,7 @@ import { checkUser } from "@/lib/checkUser";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { claimFoodItem } from "@/src/actions/claim";
 import Link from "next/link";
 
 // Force the page to refresh data every time you visit
@@ -62,7 +63,14 @@ export default async function Home() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">Claim This Item</Button>
+              <form action={claimFoodItem} className="w-full">
+                {/* Hidden input to pass the ID to the server */}
+                <input type="hidden" name="id" value={item.id} />
+                
+                <Button className="w-full bg-green-600 hover:bg-green-700">
+                  Claim This Item
+                </Button>
+              </form>
             </CardFooter>
           </Card>
         ))}
