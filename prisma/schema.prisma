@@ -29,7 +29,7 @@ model FoodItem {
   image         String?  // URL of the food photo
   pickupTime    String   // e.g. "Today before 9 PM"
   
-  status        String   @default("AVAILABLE") // AVAILABLE, BOOKED, CLAIMED
+  status        String   @default("available") // AVAILABLE, BOOKED, CLAIMED
   
   createdAt     DateTime @default(now())
   

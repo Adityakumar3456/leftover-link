@@ -32,6 +32,7 @@ async function createFoodItem(formData) {
       description: formData.get("description"),
       pickupTime: formData.get("pickupTime"),
       userId: dbUser.id,
+      status: "available",
     },
   });
 
