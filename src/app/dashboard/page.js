@@ -13,34 +13,32 @@ async function createFoodItem(formData) {
   const user = await currentUser();
   if (!user) return;
 
-  // 1. Find the Database User
   const dbUser = await db.user.findUnique({
-    where: {
-      clerkId: user.id,
-    },
+    where: { clerkId: user.id },
   });
 
-  if (!dbUser) {
-    console.log("User not found in database");
-    return;
-  }
+  if (!dbUser) return;
 
-  // 2. Save the food item
+  // Convert the input string to a real Date object
+  const deadlineString = formData.get("deadline"); 
+  const deadlineDate = deadlineString ? new Date(deadlineString) : null;
+
   await db.foodItem.create({
     data: {
       title: formData.get("title"),
       description: formData.get("description"),
       pickupTime: formData.get("pickupTime"),
+      
+      // SAVE THE EXACT DATE
+      deadline: deadlineDate,
+      
       userId: dbUser.id,
       status: "available",
     },
   });
 
-  // 3. FORCE REFRESH THE HOME PAGE (The Magic Fix)
-  revalidatePath("/"); 
-
-  // 4. Go back home
-  redirect("/"); 
+  revalidatePath("/");
+  redirect("/");
 }
 
 export default async function Dashboard() {

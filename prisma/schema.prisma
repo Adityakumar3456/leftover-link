@@ -11,12 +11,12 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  clerkId   String   @unique // This links to your Login system
+  clerkId   String   @unique 
   role      String   @default("USER") // "BUSINESS" or "USER"
   createdAt DateTime @default(now())
 
   // Relationships
-  items     FoodItem[] // A user can post many food items
+  items     FoodItem[] 
 }
 
 // 2. THE FOOD (Leftover listings)
@@ -24,13 +24,17 @@ model FoodItem {
   id            String   @id @default(uuid())
   title         String
   description   String?
-  price         Float    @default(0) // 0 means Free!
+  price         Float    @default(0) 
   originalPrice Float?
-  image         String?  // URL of the food photo
-  pickupTime    String   // e.g. "Today before 9 PM"
-  
-  status        String   @default("available") // AVAILABLE, BOOKED, CLAIMED
-  
+  image         String?  
+  pickupTime    String   
+
+  // This is the new field for the Timer/Urgency logic
+  deadline      DateTime? 
+
+  // Status to track if it is taken (lowercase to be safe!)
+  status        String   @default("available") 
+
   createdAt     DateTime @default(now())
   
   // Who posted this?
