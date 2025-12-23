@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { checkUser } from "@/lib/checkUser";
-import { claimFoodItem } from "@/src/actions/claim"; // Make sure this path is correct for your folder!
+import { claimFoodItem } from "@/actions/claim"; // Make sure this path is correct for your folder!
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
