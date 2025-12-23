@@ -44,6 +44,8 @@ model FoodItem {
   status        String   @default("available") 
 
   createdAt     DateTime @default(now())
+
+  foodType        String    @default("veg") // "veg" or "non-veg"
  
   
   // Who posted this?

@@ -16,8 +16,6 @@ async function createFoodItem(formData) {
   const dbUser = await db.user.findUnique({ where: { clerkId: user.id } });
   
   const deadlineDate = formData.get("deadline") ? new Date(formData.get("deadline")) : null;
-
-  // Handle Price (If empty, it's 0/Free)
   const price = parseFloat(formData.get("price")) || 0;
   const originalPrice = parseFloat(formData.get("originalPrice")) || 0;
 
@@ -27,9 +25,10 @@ async function createFoodItem(formData) {
       description: formData.get("description"),
       pickupTime: formData.get("pickupTime"),
       contactPhone: formData.get("contactPhone"),
-      address: formData.get("address"), // <--- NEW ADDRESS
-      price: price,                     // <--- NEW PRICE
-      originalPrice: originalPrice,     // <--- NEW ORIGINAL PRICE
+      address: formData.get("address"),
+      price: price,
+      originalPrice: originalPrice,
+      foodType: formData.get("foodType"), // <--- SAVE THE TYPE
       deadline: deadlineDate,
       userId: dbUser.id,
       status: "available",
@@ -58,6 +57,19 @@ export default async function Dashboard() {
                 <Label htmlFor="address">Pickup Address</Label>
                 <Input name="address" placeholder="e.g. 12 Main St, Near Station" required />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="foodType">Food Type</Label>
+              <select 
+                name="foodType" 
+                id="foodType" 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                required
+              >
+                <option value="veg">🟢 Vegetarian</option>
+                <option value="non-veg">🔴 Non-Vegetarian</option>
+              </select>
             </div>
 
             <div className="space-y-2">

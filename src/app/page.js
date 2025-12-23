@@ -4,6 +4,7 @@ import { claimFoodItem } from "@/actions/claim";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import FoodFeed from "@/components/FoodFeed";
 import Link from "next/link";
 import Footer from "@/components/Footer"; 
 
@@ -79,42 +80,17 @@ export default async function Home() {
       </SignedOut>
 
       {/* --- APP FEED (Logged IN) --- */}
+      {/* --- APP FEED (Logged IN) --- */}
       <SignedIn>
-        <main className="flex-grow max-w-7xl mx-auto px-4 py-6 md:py-10 w-full space-y-10">
+        <main className="flex-grow max-w-7xl mx-auto px-4 py-6 md:py-10 w-full">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">🍽️ Live Food Feed</h2>
+            <p className="text-gray-500">Find free meals and hot deals near you.</p>
+          </div>
+
+          {/* WE COMBINE FREE & DISCOUNT ITEMS FOR THE SEARCH FEED */}
+          <FoodFeed initialItems={[...discountItems, ...freeItems]} />
           
-          {/* DISCOUNT SECTION */}
-          {discountItems.length > 0 && (
-            <section>
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800">🔥 Hot Deals</h2>
-                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs md:text-sm font-bold">80% Off</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {discountItems.map((item) => <FoodCard key={item.id} item={item} isDiscount={true} />)}
-              </div>
-            </section>
-          )}
-
-          {/* FREE FOOD SECTION */}
-          <section>
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-800">💚 Free Food</h2>
-              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs md:text-sm font-bold">Community</span>
-            </div>
-
-            {freeItems.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-100 mx-auto max-w-md">
-                <p className="text-lg text-gray-400 font-medium">No free food right now.</p>
-                <Link href="/dashboard">
-                  <Button className="mt-4" variant="outline">Post Leftovers</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {freeItems.map((item) => <FoodCard key={item.id} item={item} isDiscount={false} />)}
-              </div>
-            )}
-          </section>
         </main>
       </SignedIn>
 
