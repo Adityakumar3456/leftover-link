@@ -23,13 +23,14 @@ async function createFoodItem(formData) {
       title: formData.get("title"),
       description: formData.get("description"),
       pickupTime: formData.get("pickupTime"),
+      contactPhone: formData.get("contactPhone"), // <--- SAVE PHONE
       deadline: deadlineDate,
       userId: dbUser.id,
       status: "available",
     },
   });
   revalidatePath("/");
-  revalidatePath("/dashboard"); // Refresh this page too
+  revalidatePath("/dashboard");
 }
 
 export default async function Dashboard() {
@@ -64,6 +65,10 @@ export default async function Dashboard() {
             <div className="space-y-2">
               <Label htmlFor="deadline" className="text-red-600 font-bold">Expiry Date</Label>
               <Input type="datetime-local" name="deadline" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactPhone">Contact Phone (Optional)</Label>
+              <Input name="contactPhone" placeholder="e.g. +91 98765 43210" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="pickupTime">Pickup Notes</Label>

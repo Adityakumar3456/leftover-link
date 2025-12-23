@@ -35,6 +35,7 @@ model FoodItem {
   status        String   @default("available") 
 
   createdAt     DateTime @default(now())
+  contactPhone    String?
   
   // Who posted this?
   userId        String
