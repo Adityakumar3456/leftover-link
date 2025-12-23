@@ -39,4 +39,5 @@ model FoodItem {
   // Who posted this?
   userId        String
   user          User     @relation(fields: [userId], references: [id])
+  claimedByUserId String?
 }
