@@ -1,13 +1,18 @@
-import { authMiddleware } from "@clerk/nextjs";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default authMiddleware({
-  // 1. MAKE THESE ROUTES PUBLIC (So users don't get blocked)
-  publicRoutes: ["/", "/api/uploadthing"], 
+// 1. Define which routes are PROTECTED (require login)
+// Everything else (like Home "/") is automatically Public.
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',  // Lock Dashboard
+  '/my-food(.*)',    // Lock My Orders
+  '/api/uploadthing' // Lock Uploads
+]);
 
-  // 2. IGNORE THESE ROUTES (To prevent loops on static files)
-  ignoredRoutes: ["/((?!api|trpc))(_next.*|.+\\.[\\w]+$)", "/_next"],
+export default clerkMiddleware((auth, req) => {
+  // 2. Only protect the specific routes we defined above
+  if (isProtectedRoute(req)) auth().protect();
 });
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };
