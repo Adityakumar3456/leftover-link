@@ -23,10 +23,19 @@ model FoodItem {
   id            String   @id @default(uuid())
   title         String
   description   String?
-  price         Float    @default(0) 
-  originalPrice Float?
-  image         String?  
+   
+
+ 
   pickupTime    String   
+
+  price           Float     @default(0)       // 0 = Free, >0 = Discounted
+  originalPrice   Float?                      // To show "Was $10, Now $2"
+  
+  // LOCATION & CONTACT
+  address         String?                     // New Address Field
+  contactPhone    String?   
+
+  image           String?
 
   // This is the new field for the Timer
   deadline      DateTime? 
@@ -35,7 +44,7 @@ model FoodItem {
   status        String   @default("available") 
 
   createdAt     DateTime @default(now())
-  contactPhone    String?
+ 
   
   // Who posted this?
   userId        String
