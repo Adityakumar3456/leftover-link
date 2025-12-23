@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. THE USER
+// 1. UPDATE USER MODEL
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -15,41 +15,33 @@ model User {
   role      String   @default("USER")
   createdAt DateTime @default(now())
 
-  items     FoodItem[] 
+  // Items the user POSTED (as a Restaurant)
+  postedItems FoodItem[] @relation("PostedBy")
+
+  // Items the user CLAIMED (as a Hungry Person)
+  claimedItems FoodItem[] @relation("ClaimedBy")
 }
 
-// 2. THE FOOD
+// 2. UPDATE FOOD ITEM MODEL
 model FoodItem {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   title         String
   description   String?
-   
+  pickupTime    String
+  contactPhone  String?
+  address       String?
+  price         Float     @default(0)
+  originalPrice Float?
+  foodType      String    @default("veg")
+  deadline      DateTime?
+  status        String    @default("available")
+  createdAt     DateTime  @default(now())
 
- 
-  pickupTime    String   
-
-  price           Float     @default(0)       // 0 = Free, >0 = Discounted
-  originalPrice   Float?                      // To show "Was $10, Now $2"
-  
-  // LOCATION & CONTACT
-  address         String?                     // New Address Field
-  contactPhone    String?   
-
-  image           String?
-
-  // This is the new field for the Timer
-  deadline      DateTime? 
-
-  // Status (lowercase is safer)
-  status        String   @default("available") 
-
-  createdAt     DateTime @default(now())
-
-  foodType        String    @default("veg") // "veg" or "non-veg"
- 
-  
-  // Who posted this?
+  // RELATION 1: Who Posted it?
   userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  user          User      @relation("PostedBy", fields: [userId], references: [id])
+
+  // RELATION 2: Who Claimed it? (New Link)
   claimedByUserId String?
+  claimedBy       User?     @relation("ClaimedBy", fields: [claimedByUserId], references: [id])
 }
