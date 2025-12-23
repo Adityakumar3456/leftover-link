@@ -25,35 +25,33 @@ model FoodItem {
   title         String
   description   String?
   pickupTime    String
+  
+  // NEW FIELDS
   contactPhone  String?
   address       String?
   price         Float     @default(0)
   originalPrice Float?
-  foodType      String    @default("veg")
+  foodType      String    @default("veg") // veg or non-veg
   deadline      DateTime?
+  quantity      Int       @default(1)     // <--- The Quantity Field
+  
   status        String    @default("available")
   createdAt     DateTime  @default(now())
-  
-  // NEW: Quantity System
-  quantity      Int       @default(1) 
 
   userId        String
   user          User      @relation("PostedBy", fields: [userId], references: [id])
 
-  // NEW: List of Claims (One item can be claimed by many people)
   claims        Claim[]   
 }
 
-// 3. NEW: THE CLAIM RECORD
+// 3. THE CLAIM RECORD
 model Claim {
   id          String   @id @default(uuid())
   createdAt   DateTime @default(now())
 
-  // Who took it?
   userId      String
   user        User     @relation(fields: [userId], references: [id])
 
-  // Which food?
   foodItemId  String
   foodItem    FoodItem @relation(fields: [foodItemId], references: [id])
 }
