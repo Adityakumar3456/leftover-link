@@ -5,43 +5,42 @@ import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 
 export async function claimFoodItem(formData) {
-  // 1. LOG START
-  console.log("-----------------------------------");
-  console.log("CLAIM ACTION STARTED");
+  const foodId = formData.get("id");
+  const user = await currentUser();
 
-  try {
-    const foodId = formData.get("id");
-    const user = await currentUser(); // Get the logged-in user
+  if (!user || !foodId) return;
 
-    if (!user) {
-      console.log("Error: Must be logged in to claim");
-      return;
-    }
+  // 1. Get the item to check quantity
+  const item = await db.foodItem.findUnique({ where: { id: foodId } });
 
-    if (!foodId) {
-      console.log("ERROR: No ID found!");
-      return;
-    }
+  if (!item || item.quantity <= 0) {
+    console.log("Item already fully claimed!");
+    return;
+  }
 
-    console.log(`User ${user.id} is claiming food ${foodId}`);
-
-    // 2. RUN UPDATE (Mark as claimed AND save who took it)
-    await db.foodItem.update({
-      where: { id: foodId },
-      data: { 
-        status: "claimed",
-        claimedByUserId: user.id // <--- CRITICAL: Saves the user ID
+  // 2. Run the Transaction (Create Claim + Lower Quantity)
+  await db.$transaction(async (tx) => {
+    // Create the record of WHO took it
+    await tx.claim.create({
+      data: {
+        userId: user.id,
+        foodItemId: foodId,
       },
     });
 
-    console.log("SUCCESS: Item claimed successfully.");
+    // Update the food item (Decrement quantity)
+    const newQuantity = item.quantity - 1;
+    await tx.foodItem.update({
+      where: { id: foodId },
+      data: { 
+        quantity: newQuantity,
+        // If quantity hits 0, mark as 'claimed' (vanishes from list)
+        status: newQuantity === 0 ? "claimed" : "available"
+      },
+    });
+  });
 
-    // 3. REFRESH PAGES
-    revalidatePath("/");
-    revalidatePath("/dashboard");
-    revalidatePath("/my-food"); // We are about to build this!
-
-  } catch (error) {
-    console.error("CRITICAL ERROR in claim action:", error);
-  }
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+  revalidatePath("/my-food");
 }

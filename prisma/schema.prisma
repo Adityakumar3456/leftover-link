@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. UPDATE USER MODEL
+// 1. THE USER
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -15,14 +15,11 @@ model User {
   role      String   @default("USER")
   createdAt DateTime @default(now())
 
-  // Items the user POSTED (as a Restaurant)
   postedItems FoodItem[] @relation("PostedBy")
-
-  // Items the user CLAIMED (as a Hungry Person)
-  claimedItems FoodItem[] @relation("ClaimedBy")
+  claims      Claim[]    // Link to their claims
 }
 
-// 2. UPDATE FOOD ITEM MODEL
+// 2. THE FOOD
 model FoodItem {
   id            String    @id @default(uuid())
   title         String
@@ -36,12 +33,27 @@ model FoodItem {
   deadline      DateTime?
   status        String    @default("available")
   createdAt     DateTime  @default(now())
+  
+  // NEW: Quantity System
+  quantity      Int       @default(1) 
 
-  // RELATION 1: Who Posted it?
   userId        String
   user          User      @relation("PostedBy", fields: [userId], references: [id])
 
-  // RELATION 2: Who Claimed it? (New Link)
-  claimedByUserId String?
-  claimedBy       User?     @relation("ClaimedBy", fields: [claimedByUserId], references: [id])
+  // NEW: List of Claims (One item can be claimed by many people)
+  claims        Claim[]   
+}
+
+// 3. NEW: THE CLAIM RECORD
+model Claim {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  // Who took it?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  // Which food?
+  foodItemId  String
+  foodItem    FoodItem @relation(fields: [foodItemId], references: [id])
 }

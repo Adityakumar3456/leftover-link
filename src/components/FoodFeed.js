@@ -115,12 +115,18 @@ Link: ${siteLink}
       <CardHeader className="pb-2 px-4 pt-4">
         <div className="flex justify-between items-start gap-2">
           <CardTitle className="text-lg md:text-xl font-bold leading-tight">{item.title}</CardTitle>
+
+          
           
           <div className="flex flex-col items-end gap-1">
              {/* VEG / NON-VEG BADGE */}
              <span className={`text-[10px] px-2 py-1 rounded font-bold border ${item.foodType === 'non-veg' ? 'border-red-200 text-red-600 bg-red-50' : 'border-green-200 text-green-600 bg-green-50'}`}>
                {item.foodType === 'non-veg' ? 'NON-VEG' : 'VEG'}
              </span>
+
+             <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-bold border border-blue-200">
+                Only {item.quantity} Left!
+            </span>
              {/* DISCOUNT BADGE */}
              {isDiscount && discountPercent > 0 && (
                 <span className="bg-orange-600 text-white text-[10px] px-2 py-1 rounded font-bold">
