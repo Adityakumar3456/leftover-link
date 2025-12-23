@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { claimFoodItem } from "@/actions/claim";
+import { claimFoodItem } from "@/actions/claim"; // Import the Server Action
 
 export default function FoodFeed({ initialItems }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,7 +12,7 @@ export default function FoodFeed({ initialItems }) {
 
   // FILTER LOGIC
   const filteredItems = initialItems.filter((item) => {
-    // 1. Check Text Search (Title or Description)
+    // 1. Check Text Search
     const matchesSearch = 
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -27,7 +27,7 @@ export default function FoodFeed({ initialItems }) {
     <div className="space-y-6">
       
       {/* SEARCH BAR & FILTERS */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border space-y-4 md:space-y-0 md:flex md:gap-4 items-center">
+      <div className="bg-white p-4 rounded-xl shadow-sm border space-y-4 md:space-y-0 md:flex md:gap-4 items-center sticky top-20 z-40">
         <div className="flex-grow">
           <Input 
             placeholder="Search for pizza, rice, burger..." 
@@ -77,7 +77,7 @@ export default function FoodFeed({ initialItems }) {
   );
 }
 
-// REUSABLE CARD COMPONENT (Moved inside here for easier state access)
+// --- THE "OLD CARD" RESTORED ---
 function FoodCard({ item }) {
   const isDiscount = item.price > 0;
   
@@ -90,21 +90,38 @@ function FoodCard({ item }) {
   const discountPercent = item.originalPrice 
     ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100) 
     : 0;
-    
-  const whatsappUrl = `https://wa.me/?text=Check out ${item.title} on LeftoverLink!`;
+
+  // Detailed WhatsApp Message
+  const siteLink = "https://leftover-link.vercel.app"; 
+  const whatsappMessage = `
+*Hello! I saw this food on LeftoverLink* 🥘
+
+*Item:* ${item.title} (${item.foodType === 'non-veg' ? 'Non-Veg' : 'Veg'})
+*Pickup Time:* ${item.pickupTime}
+*Expires At:* ${formattedExpiry}
+*Address:* ${item.address || "Ask owner"}
+*Contact:* ${item.contactPhone || "N/A"}
+
+Link: ${siteLink}
+  `.trim();
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <Card className="w-full shadow-sm hover:shadow-lg transition border-0 flex flex-col overflow-hidden h-full bg-white">
+      {/* Top Color Strip */}
       <div className={`h-2 w-full ${item.foodType === 'non-veg' ? 'bg-red-500' : 'bg-green-500'}`} />
       
       <CardHeader className="pb-2 px-4 pt-4">
         <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg font-bold leading-tight">{item.title}</CardTitle>
-          <div className="flex gap-1">
+          <CardTitle className="text-lg md:text-xl font-bold leading-tight">{item.title}</CardTitle>
+          
+          <div className="flex flex-col items-end gap-1">
              {/* VEG / NON-VEG BADGE */}
              <span className={`text-[10px] px-2 py-1 rounded font-bold border ${item.foodType === 'non-veg' ? 'border-red-200 text-red-600 bg-red-50' : 'border-green-200 text-green-600 bg-green-50'}`}>
                {item.foodType === 'non-veg' ? 'NON-VEG' : 'VEG'}
              </span>
+             {/* DISCOUNT BADGE */}
              {isDiscount && discountPercent > 0 && (
                 <span className="bg-orange-600 text-white text-[10px] px-2 py-1 rounded font-bold">
                   {discountPercent}% OFF
@@ -112,37 +129,51 @@ function FoodCard({ item }) {
              )}
           </div>
         </div>
+        <p className="text-xs text-gray-500 font-mono mt-1 flex items-center gap-1">
+          📍 {item.address || "Location on Request"}
+        </p>
       </CardHeader>
 
       <CardContent className="flex-grow pt-2 px-4">
         <p className="text-gray-600 mb-4 text-sm line-clamp-2">{item.description}</p>
         
+        {/* PRICE SECTION */}
         {isDiscount && (
           <div className="flex items-end gap-2 mb-3">
-             <span className="text-xl font-bold text-gray-900">₹{item.price}</span>
+             <span className="text-xl md:text-2xl font-bold text-gray-900">₹{item.price}</span>
              {item.originalPrice && <span className="text-sm text-gray-400 line-through mb-1">₹{item.originalPrice}</span>}
           </div>
         )}
 
-        <div className="bg-gray-50 p-3 rounded-lg text-xs space-y-2 border border-gray-100">
+        {/* DETAILS BOX */}
+        <div className="bg-gray-50 p-3 rounded-lg text-xs md:text-sm space-y-2 border border-gray-100">
           <div className="flex items-center gap-2">
             <span>⏰</span> <span className="font-semibold text-gray-700">Pickup:</span> {item.pickupTime}
           </div>
           <div className="flex items-center gap-2 text-red-600">
             <span>⏳</span> <span className="font-semibold">Expires:</span> {formattedExpiry}
           </div>
+          {item.contactPhone && (
+            <div className="flex items-center gap-2 text-indigo-600">
+              <span>📞</span> <span className="font-semibold">Ph:</span> {item.contactPhone}
+            </div>
+          )}
         </div>
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3 px-4 pb-6 pt-0 mt-4">
-         {/* NOTICE: We removed the <form> claim button here because Server Actions inside Client Components need special handling. 
-             For now, we keep the button visual but focusing on Search. 
-             Ideally, we pass the claimAction as a prop or use an API route. 
-             Let's use a simple WhatsApp button for now to keep it bug-free for this step. */}
+        {/* RESTORED CLAIM BUTTON */}
+        <form action={claimFoodItem} className="w-full">
+          <input type="hidden" name="id" value={item.id} />
+          <Button className={`w-full font-bold shadow-sm ${isDiscount ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'}`}>
+            {isDiscount ? "Claim Deal ⚡" : "Claim Free 🎁"}
+          </Button>
+        </form>
         
+        {/* RESTORED WHATSAPP BUTTON */}
         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-          <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
-            Contact to Claim 💬
+          <Button variant="outline" className="w-full text-gray-600 border-gray-200 hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors">
+            Share on WhatsApp 💬
           </Button>
         </a>
       </CardFooter>
