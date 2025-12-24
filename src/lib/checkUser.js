@@ -4,25 +4,24 @@ import { db } from "@/lib/db";
 export const checkUser = async () => {
   const user = await currentUser();
 
-  // 1. If user is NOT logged in, just return null. 
-  // DO NOT REDIRECT here. Let the page handle it.
+  // If user is not logged in, DO NOTHING. Return null.
   if (!user) {
     return null;
   }
 
-  // 2. Check if user exists in DB
+  // Check if user is already in our database
   const loggedInUser = await db.user.findUnique({
     where: {
       clerkId: user.id,
     },
   });
 
-  // 3. If found, return user
+  // If found, return them
   if (loggedInUser) {
     return loggedInUser;
   }
 
-  // 4. If not found, create new user
+  // If not found, create them
   const newUser = await db.user.create({
     data: {
       clerkId: user.id,

@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// We ONLY protect these specific routes
+// We ONLY lock these specific routes.
+// The Home Page ("/") is NOT in this list, so it will be Public.
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)', 
   '/my-food(.*)',

@@ -10,17 +10,15 @@ export async function claimFoodItem(formData) {
 
   if (!user || !foodId) return;
 
-  // 1. Get the item to check quantity
   const item = await db.foodItem.findUnique({ where: { id: foodId } });
 
   if (!item || item.quantity <= 0) {
-    console.log("Item already fully claimed!");
     return;
   }
 
-  // 2. Run the Transaction (Create Claim + Lower Quantity)
+  // Use a transaction to safely update everything at once
   await db.$transaction(async (tx) => {
-    // Create the record of WHO took it
+    // 1. Record who claimed it
     await tx.claim.create({
       data: {
         userId: user.id,
@@ -28,13 +26,12 @@ export async function claimFoodItem(formData) {
       },
     });
 
-    // Update the food item (Decrement quantity)
+    // 2. Reduce quantity
     const newQuantity = item.quantity - 1;
     await tx.foodItem.update({
       where: { id: foodId },
       data: { 
         quantity: newQuantity,
-        // If quantity hits 0, mark as 'claimed' (vanishes from list)
         status: newQuantity === 0 ? "claimed" : "available"
       },
     });
