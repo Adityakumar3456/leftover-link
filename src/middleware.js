@@ -1,23 +1,25 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Simple matcher for Protected Routes
+// 1. Define which pages need protection
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)', 
   '/my-food(.*)',
   '/api/uploadthing'
 ]);
 
-export default clerkMiddleware((auth, req) => {
+// 2. Run the check
+export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
-    auth().protect();
+    await auth.protect();
   }
 });
 
+// 3. Configuration to avoid static files
 export const config = {
   matcher: [
-    // Standard Next.js matcher
-    '/((?!.*\\..*|_next).*)', 
-    '/', 
-    '/(api|trpc)(.*)'
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };
