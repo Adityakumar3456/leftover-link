@@ -10,23 +10,34 @@ export async function claimFoodItem(formData) {
 
   if (!user || !foodId) return;
 
+  // 1. FETCH THE REAL DATABASE USER (The missing step!)
+  const dbUser = await db.user.findUnique({
+    where: { clerkId: user.id }
+  });
+
+  if (!dbUser) {
+    console.error("User not found in database");
+    return;
+  }
+
+  // 2. Get the item to check quantity
   const item = await db.foodItem.findUnique({ where: { id: foodId } });
 
   if (!item || item.quantity <= 0) {
     return;
   }
 
-  // Use a transaction to safely update everything at once
+  // 3. Run the Transaction
   await db.$transaction(async (tx) => {
-    // 1. Record who claimed it
+    // Create the record using the DATABASE ID (dbUser.id), not the Clerk ID
     await tx.claim.create({
       data: {
-        userId: user.id,
+        userId: dbUser.id, // <--- FIXED HERE
         foodItemId: foodId,
       },
     });
 
-    // 2. Reduce quantity
+    // Reduce quantity
     const newQuantity = item.quantity - 1;
     await tx.foodItem.update({
       where: { id: foodId },
